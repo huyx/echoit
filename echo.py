@@ -27,6 +27,23 @@ Example:
 import inspect
 import sys
 
+_write = sys.stdout.write
+_eol = '\n'
+
+def write(string):
+    " Wrap output function. "
+    _write(string + _eol)
+
+def setup(write, eol):
+    """ Customize write method and EndOfLine.
+
+    @param write: write method
+    @param eol: end of line
+    """
+    global _write, _eol
+    _write = write
+    _eol = eol
+
 def name(item):
     " Return an item's name. "
     return item.__name__
@@ -42,7 +59,7 @@ def is_class_private_name(name):
 
 def method_name(method):
     """ Return a method's name.
-    
+
     This function returns the name the method is accessed by from
     outside the class (i.e. it prefixes "private" methods appropriately).
     """
@@ -60,7 +77,7 @@ def format_arg_value(arg_val):
     arg, val = arg_val
     return "%s=%r" % (arg, val)
 
-def echo(fn, write=sys.stdout.write):
+def echo(fn):
     """ Echo calls to a function.
 
     Returns a decorated version of the input function which "echoes" calls
@@ -85,11 +102,11 @@ def echo(fn, write=sys.stdout.write):
         nameless = map(repr, v[argcount:])
         keyword = map(format_arg_value, k.items())
         args = positional + defaulted + nameless + keyword
-        write("%s(%s)\n" % (name(fn), ", ".join(args)))
+        write("%s(%s)" % (name(fn), ", ".join(args)))
         return fn(*v, **k)
     return wrapped
 
-def echo_instancemethod(klass, method, write=sys.stdout.write):
+def echo_instancemethod(klass, method):
     """ Change an instancemethod so that calls to it are echoed.
 
     Replacing a classmethod is a little more tricky.
@@ -100,25 +117,25 @@ def echo_instancemethod(klass, method, write=sys.stdout.write):
     if mname in never_echo:
         pass
     elif is_classmethod(method):
-        setattr(klass, mname, classmethod(echo(method.im_func, write)))
+        setattr(klass, mname, classmethod(echo(method.im_func)))
     else:
-        setattr(klass, mname, echo(method, write))
+        setattr(klass, mname, echo(method))
 
-def echo_class(klass, write=sys.stdout.write):
+def echo_class(klass):
     """ Echo calls to class methods and static functions
     """
     for _, method in inspect.getmembers(klass, inspect.ismethod):
-        echo_instancemethod(klass, method, write)
+        echo_instancemethod(klass, method)
     for _, fn in inspect.getmembers(klass, inspect.isfunction):
-        setattr(klass, name(fn), staticmethod(echo(fn, write)))
+        setattr(klass, name(fn), staticmethod(echo(fn)))
 
-def echo_module(mod, write=sys.stdout.write):
+def echo_module(mod):
     """ Echo calls to functions and methods in a module.
     """
     for fname, fn in inspect.getmembers(mod, inspect.isfunction):
-        setattr(mod, fname, echo(fn, write))
+        setattr(mod, fname, echo(fn))
     for _, klass in inspect.getmembers(mod, inspect.isclass):
-        echo_class(klass, write)
+        echo_class(klass)
 
 if __name__ == "__main__":
     import doctest

@@ -1,30 +1,13 @@
-README
+原来的 README 参见 README.orig.txt
 
-Echo.py is a pure Python module which can be used to trace
-calls made to:
+这个在原来的基础上增加了两个参数的定制：
 
- - individual functions
- - all methods within a class
- - all functions in a module (including class methods)
+    echo 模块
+        setup(write, method)
 
-To run the echo tests:
+使用例子(使用在 Twisted 中)：
 
-$ python echo.py
-
-To install:
-
-$ python setup.py install
-
-For install options and help:
-
-$ python setup.py --help
-
-Updates available via anonymous Subversion access from:
-
-http://svn.wordaligned.org/svn/etc 
-
-Documentation at: 
-
-http://wordaligned.org/articles/echo
-
-Any other questions or comments, email: tag@wordaligned.org
+    from twisted.python import log
+	import echo
+	
+	echo.setup(log.msg, '')
